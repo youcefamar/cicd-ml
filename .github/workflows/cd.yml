@@ -10,10 +10,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Deployment To Hugging Face
         env:
           HF: ${{ secrets.HF }}
-        run: make deploy HF=$HF
+          HF_TOKEN: ${{ secrets.HF }}
+        run: make deploy HF=$HF HF_TOKEN=$HF_TOKEN
