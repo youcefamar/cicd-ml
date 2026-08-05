@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drug Classification - Machine Learning App</title>
+  <meta name="description" content="Automated Drug Classification powered by Scikit-Learn Random Forest and deployed via CI/CD.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: rgba(30, 41, 59, 0.7);
+      --bg-card-hover: rgba(30, 41, 59, 0.9);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #818cf8;
+      --primary-hover: #6366f1;
+      --radius: 16px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.75rem;
+      font-weight: 800;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .app-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary);
+      height: 6px;
+      border-radius: 3px;
+      background: #334155;
+    }
+
+    .value-badge {
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--primary);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.25rem 0.75rem;
+      border-radius: 8px;
+      font-weight: 700;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .radio-btn {
+      flex: 1;
+      padding: 0.75rem;
+      text-align: center;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .radio-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .radio-btn.active {
+      background: var(--accent-gradient);
+      border-color: transparent;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .presets {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .preset-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .preset-btns {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.5rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .preset-btn:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .result-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .predicted-badge-label {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .predicted-drug {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      color: #38bdf8;
+      margin-bottom: 1.5rem;
+      line-height: 1;
+    }
+
+    .prob-bar-group {
+      margin-bottom: 1rem;
+    }
+
+    .prob-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .prob-bar-bg {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .prob-bar-fill {
+      height: 100%;
+      background: var(--accent-gradient);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.5s ease-out;
+    }
+
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Drug Classification AI</h1>
+      <p class="subtitle">Predict the recommended medication based on patient clinical parameters</p>
+    </header>
+
+    <div class="app-grid">
+      <!-- Input Form -->
+      <div class="card">
+        <form id="drug-form">
+          <!-- Age -->
+          <div class="form-group">
+            <label for="age">Age</label>
+            <div class="range-wrap">
+              <input type="range" id="age" min="15" max="74" value="30">
+              <span class="value-badge" id="age-val">30</span>
+            </div>
+          </div>
+
+          <!-- Sex -->
+          <div class="form-group">
+            <label>Sex</label>
+            <div class="btn-group" id="sex-group">
+              <div class="radio-btn active" data-val="M">Male (M)</div>
+              <div class="radio-btn" data-val="F">Female (F)</div>
+            </div>
+          </div>
+
+          <!-- Blood Pressure -->
+          <div class="form-group">
+            <label>Blood Pressure</label>
+            <div class="btn-group" id="bp-group">
+              <div class="radio-btn active" data-val="HIGH">High</div>
+              <div class="radio-btn" data-val="NORMAL">Normal</div>
+              <div class="radio-btn" data-val="LOW">Low</div>
+            </div>
+          </div>
+
+          <!-- Cholesterol -->
+          <div class="form-group">
+            <label>Cholesterol</label>
+            <div class="btn-group" id="chol-group">
+              <div class="radio-btn active" data-val="NORMAL">Normal</div>
+              <div class="radio-btn" data-val="HIGH">High</div>
+            </div>
+          </div>
+
+          <!-- Na_to_K Ratio -->
+          <div class="form-group">
+            <label for="na-to-k">Sodium to Potassium Ratio (Na_to_K)</label>
+            <div class="range-wrap">
+              <input type="range" id="na-to-k" min="6.2" max="38.2" step="0.1" value="15.4">
+              <span class="value-badge" id="na-to-k-val">15.4</span>
+            </div>
+          </div>
+        </form>
+
+        <div class="presets">
+          <div class="preset-title">Presets / Examples</div>
+          <div class="preset-btns">
+            <button class="preset-btn" onclick="applyPreset(30, 'M', 'HIGH', 'NORMAL', 15.4)">Example 1</button>
+            <button class="preset-btn" onclick="applyPreset(35, 'F', 'LOW', 'NORMAL', 8.0)">Example 2</button>
+            <button class="preset-btn" onclick="applyPreset(50, 'M', 'HIGH', 'HIGH', 34.0)">Example 3</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Card -->
+      <div class="card result-card">
+        <div class="predicted-badge-label">Predicted Prescription</div>
+        <div class="predicted-drug" id="predicted-drug">DrugY</div>
+
+        <div class="preset-title" style="margin-bottom: 1rem;">Prediction Confidence</div>
+        <div id="prob-container">
+          <!-- Probability bars dynamically generated -->
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Powered by Scikit-Learn Random Forest Pipeline • Deployed via GitHub Actions CI/CD to Hugging Face
+    </footer>
+  </div>
+
+  <script>
+    let modelData = null;
+
+    // Load model JSON
+    fetch('model.json')
+      .then(res => res.json())
+      .then(data => {
+        modelData = data;
+        predict();
+      })
+      .catch(err => console.error("Error loading model.json:", err));
+
+    // UI state
+    const state = {
+      age: 30,
+      sex: 'M',
+      bp: 'HIGH',
+      chol: 'NORMAL',
+      naToK: 15.4
+    };
+
+    // Range inputs
+    const ageInput = document.getElementById('age');
+    const ageVal = document.getElementById('age-val');
+    ageInput.addEventListener('input', (e) => {
+      state.age = parseInt(e.target.value);
+      ageVal.textContent = state.age;
+      predict();
+    });
+
+    const naToKInput = document.getElementById('na-to-k');
+    const naToKVal = document.getElementById('na-to-k-val');
+    naToKInput.addEventListener('input', (e) => {
+      state.naToK = parseFloat(e.target.value);
+      naToKVal.textContent = state.naToK;
+      predict();
+    });
+
+    // Radio groups helper
+    function setupRadioGroup(groupId, stateKey) {
+      const group = document.getElementById(groupId);
+      const btns = group.querySelectorAll('.radio-btn');
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          btns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state[stateKey] = btn.dataset.val;
+          predict();
+        });
+      });
+    }
+
+    setupRadioGroup('sex-group', 'sex');
+    setupRadioGroup('bp-group', 'bp');
+    setupRadioGroup('chol-group', 'chol');
+
+    function applyPreset(age, sex, bp, chol, naToK) {
+      state.age = age;
+      state.sex = sex;
+      state.bp = bp;
+      state.chol = chol;
+      state.naToK = naToK;
+
+      ageInput.value = age;
+      ageVal.textContent = age;
+
+      naToKInput.value = naToK;
+      naToKVal.textContent = naToK;
+
+      setRadioActive('sex-group', sex);
+      setRadioActive('bp-group', bp);
+      setRadioActive('chol-group', chol);
+
+      predict();
+    }
+
+    function setRadioActive(groupId, value) {
+      const btns = document.getElementById(groupId).querySelectorAll('.radio-btn');
+      btns.forEach(b => {
+        if (b.dataset.val === value) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+    }
+
+    // Prediction Logic using JSON model
+    function predict() {
+      if (!modelData) return;
+
+      const { classes, ordinal_categories, scaler_mean, scaler_scale, trees } = modelData;
+
+      // 1. Ordinal Encoding
+      const sexEnc = ordinal_categories[0].indexOf(state.sex);
+      const bpEnc = ordinal_categories[1].indexOf(state.bp);
+      const cholEnc = ordinal_categories[2].indexOf(state.chol);
+
+      // 2. StandardScaler for [Age, Na_to_K]
+      const ageScaled = (state.age - scaler_mean[0]) / scaler_scale[0];
+      const naToKScaled = (state.naToK - scaler_mean[1]) / scaler_scale[1];
+
+      // Feature Vector: ColumnTransformer order -> [encoder(cat), num_scaler(num)]
+      // Features: 0: sex, 1: bp, 2: chol, 3: age_scaled, 4: na_to_k_scaled
+      const features = [sexEnc, bpEnc, cholEnc, ageScaled, naToKScaled];
+
+      // Aggregate Tree Votes
+      const votes = new Array(classes.length).fill(0);
+
+      trees.forEach(tree => {
+        let curr = tree;
+        while (curr.type === 'split') {
+          const val = features[curr.feature];
+          if (val <= curr.threshold) {
+            curr = curr.left;
+          } else {
+            curr = curr.right;
+          }
+        }
+        // Leaf node
+        curr.value.forEach((v, idx) => {
+          votes[idx] += v;
+        });
+      });
+
+      const totalVotes = votes.reduce((a, b) => a + b, 0);
+      const probs = votes.map(v => v / totalVotes);
+
+      // Top predicted class
+      let maxIdx = 0;
+      for (let i = 1; i < probs.length; i++) {
+        if (probs[i] > probs[maxIdx]) maxIdx = i;
+      }
+
+      document.getElementById('predicted-drug').textContent = classes[maxIdx];
+
+      // Render probability bars
+      const probContainer = document.getElementById('prob-container');
+      probContainer.innerHTML = '';
+
+      classes.forEach((cls, idx) => {
+        const pct = (probs[idx] * 100).toFixed(1);
+        const barGroup = document.createElement('div');
+        barGroup.className = 'prob-bar-group';
+        barGroup.innerHTML = `
+          <div class="prob-header">
+            <span>${cls}</span>
+            <span>${pct}%</span>
+          </div>
+          <div class="prob-bar-bg">
+            <div class="prob-bar-fill" style="width: ${pct}%;"></div>
+          </div>
+        `;
+        probContainer.appendChild(barGroup);
+      });
+    }
+  </script>
+</body>
+</html>

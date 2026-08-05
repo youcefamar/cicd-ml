@@ -68,3 +68,44 @@ with open("./Results/metrics.txt", "w") as outfile:
 
 ## Saving the model file
 sio.dump(pipe, "./Model/drug_pipeline.skops")
+
+## Export JSON model for static web application
+import json
+
+def export_tree(tree):
+    tree_ = tree.tree_
+    def recurse(node):
+        if tree_.feature[node] != -2:
+            return {
+                "type": "split",
+                "feature": int(tree_.feature[node]),
+                "threshold": float(tree_.threshold[node]),
+                "left": recurse(tree_.children_left[node]),
+                "right": recurse(tree_.children_right[node]),
+            }
+        else:
+            return {
+                "type": "leaf",
+                "value": tree_.value[node][0].tolist()
+            }
+    return recurse(0)
+
+rf_model = pipe.named_steps["model"]
+trees_json = [export_tree(estimator) for estimator in rf_model.estimators_]
+encoder = pipe.named_steps["preprocessing"].named_transformers_["encoder"]
+ordinal_categories = [cat.tolist() for cat in encoder.categories_]
+num_imputer = pipe.named_steps["preprocessing"].named_transformers_["num_imputer"]
+num_scaler = pipe.named_steps["preprocessing"].named_transformers_["num_scaler"]
+
+model_export = {
+    "classes": pipe.classes_.tolist(),
+    "ordinal_categories": ordinal_categories,
+    "scaler_medians": num_imputer.statistics_.tolist(),
+    "scaler_mean": num_scaler.mean_.tolist(),
+    "scaler_scale": num_scaler.scale_.tolist(),
+    "trees": trees_json
+}
+
+with open("./App/model.json", "w") as f:
+    json.dump(model_export, f, indent=2)
+print("Saved JSON model to ./App/model.json")
