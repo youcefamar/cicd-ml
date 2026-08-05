@@ -28,18 +28,18 @@ update-branch:
 	git push --force origin HEAD:update
 
 hf-login: 
-	pip install -U "huggingface_hub[cli]"
+	pip install -U huggingface_hub
 	git fetch origin update:update || true
 	git checkout update || true
 	@TOKEN=$${HF_TOKEN:-$(HF)}; \
 	if [ -n "$$TOKEN" ]; then \
-		huggingface-cli login --token "$$TOKEN" --add-to-git-credential ; \
+		hf auth login --token "$$TOKEN" ; \
 	fi
 
 push-hub: 
-	huggingface-cli upload youcefamar/cicd-ml ./App . --repo-type=space --commit-message="Sync App files"
-	huggingface-cli upload youcefamar/cicd-ml ./Model /Model --repo-type=space --commit-message="Sync Model"
-	huggingface-cli upload youcefamar/cicd-ml ./Results /Results --repo-type=space --commit-message="Sync Model"
+	hf upload youcefamar/cicd-ml ./App . --repo-type=space --commit-message="Sync App files"
+	hf upload youcefamar/cicd-ml ./Model /Model --repo-type=space --commit-message="Sync Model"
+	hf upload youcefamar/cicd-ml ./Results /Results --repo-type=space --commit-message="Sync Model"
 
 deploy: hf-login push-hub
 
