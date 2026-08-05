@@ -43,9 +43,9 @@ hf-login:
 	fi
 
 push-hub: 
-	hf upload youcefamar/drug-app ./App . --repo-type=space --commit-message="Sync App files"
-	hf upload youcefamar/drug-app ./Model /Model --repo-type=space --commit-message="Sync Model"
-	hf upload youcefamar/drug-app ./Results /Results --repo-type=space --commit-message="Sync Model"
+	hf upload youcefamar/drug_app ./App . --repo-type=space --commit-message="Sync App files"
+	hf upload youcefamar/drug_app ./Model /Model --repo-type=space --commit-message="Sync Model"
+	hf upload youcefamar/drug_app ./Results /Results --repo-type=space --commit-message="Sync Model"
 
 deploy: hf-login push-hub
 
