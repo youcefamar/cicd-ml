@@ -32,7 +32,13 @@ hf-login:
 	git fetch origin update:update || true
 	git checkout update || true
 	@TOKEN=$${HF_TOKEN:-$(HF)}; \
-	if [ -n "$$TOKEN" ]; then \
+	if [ -z "$$TOKEN" ]; then \
+		echo "********************************************************************************"; \
+		echo "ERROR: Hugging Face token secret 'HF' is missing or empty!"; \
+		echo "Please add your Hugging Face WRITE token under GitHub Settings -> Secrets and variables -> Actions -> Repository secret named 'HF'."; \
+		echo "********************************************************************************"; \
+		exit 1; \
+	else \
 		hf auth login --token "$$TOKEN" ; \
 	fi
 
