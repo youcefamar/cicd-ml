@@ -84,9 +84,10 @@ def export_tree(tree):
                 "right": recurse(tree_.children_right[node]),
             }
         else:
+            # Fix: Convert numpy array to list properly
             return {
                 "type": "leaf",
-                "value": tree_.value[node][0].tolist()
+                "value": tree_.value[node].tolist()  # Remove the extra [0] indexing
             }
     return recurse(0)
 
