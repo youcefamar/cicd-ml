@@ -22,8 +22,8 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 ## Pipeline
-cat_col = [1,2,3]
-num_col = [0,4]
+cat_col = [1, 2, 3]
+num_col = [0, 4]
 
 transform = ColumnTransformer(
     [
@@ -71,8 +71,10 @@ sio.dump(pipe, "./Model/drug_pipeline.skops")
 ## Export JSON model for static web application
 import json
 
+
 def export_tree(tree):
     tree_ = tree.tree_
+
     def recurse(node):
         if tree_.feature[node] != -2:
             return {
@@ -86,9 +88,11 @@ def export_tree(tree):
             # Fix: Convert numpy array to list properly
             return {
                 "type": "leaf",
-                "value": tree_.value[node].tolist()  # Remove the extra [0] indexing
+                "value": tree_.value[node].tolist(),  # Remove the extra [0] indexing
             }
+
     return recurse(0)
+
 
 rf_model = pipe.named_steps["model"]
 trees_json = [export_tree(estimator) for estimator in rf_model.estimators_]
@@ -103,7 +107,7 @@ model_export = {
     "scaler_medians": num_imputer.statistics_.tolist(),
     "scaler_mean": num_scaler.mean_.tolist(),
     "scaler_scale": num_scaler.scale_.tolist(),
-    "trees": trees_json
+    "trees": trees_json,
 }
 
 with open("./App/model.json", "w") as f:
